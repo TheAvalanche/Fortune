@@ -1,0 +1,33 @@
+<bindings xmlns="http://java.sun.com/xml/ns/jaxb"
+          xmlns:xsi="http://www.w3.org/2000/10/XMLSchema-instance"
+          xmlns:xs="http://www.w3.org/2001/XMLSchema"
+          version="2.1">
+    <bindings schemaLocation="FictionBook2.2.xsd" version="1.0">
+        <!-- Customise the package name -->
+        <schemaBindings>
+            <package name="org.fortune.schema._2_2"/>
+        </schemaBindings>
+
+        <!-- rename the value element -->
+        <bindings node="//xs:complexType[@name='dateType']">
+            <bindings node=".//xs:attribute[@name='value']">
+                <property name="valueAttribute"/>
+            </bindings>
+        </bindings>
+        <bindings node="//xs:complexType[@name='linkType']">
+            <bindings node=".//xs:attribute[@name='type']">
+                <property name="typeAttribute"/>
+            </bindings>
+        </bindings>
+        <bindings node="//xs:element[@type='notesBodyType']">
+            <property name="notesBody"/>
+        </bindings>
+    </bindings>
+
+    <bindings schemaLocation="FictionBookGenres.xsd" version="1.0">
+        <!-- Customise the package name -->
+        <schemaBindings>
+            <package name="org.fortune.schema._2_2"/>
+        </schemaBindings>
+    </bindings>
+</bindings>
