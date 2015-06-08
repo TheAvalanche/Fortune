@@ -7,6 +7,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -19,30 +20,32 @@ public class BookParser {
 
 
     public List<String> getLines(FictionBook fictionBook) {
-        return getPoemLines(getSections(fictionBook).stream()
-                .filter(section -> !section.getPOrImageOrPoem().isEmpty())
-                .map(SectionType::getPOrImageOrPoem).flatMap(Collection::stream));
+        return getLinesStream(
+                getSections(fictionBook).stream()
+                        .filter(section -> !section.getPOrImageOrPoem().isEmpty())
+                        .map(SectionType::getPOrImageOrPoem).flatMap(Collection::stream))
+                .collect(Collectors.toList());
     }
 
-    public List<String> getTextLines(FictionBook fictionBook) {
-        return getTextLines(getSections(fictionBook).stream()
-                .filter(section -> !section.getPOrImageOrPoem().isEmpty())
-                .map(SectionType::getPOrImageOrPoem).flatMap(Collection::stream));
+    private Stream<String> getLinesStream(Stream<JAXBElement<?>> stream) {
+        Stream<Serializable> poemStream = getPoemLinesStream(stream);
+        Stream<Serializable> textStream = getTextLinesStream(stream);
+
+        return Stream.concat(poemStream, textStream).map(s -> (String) s);
     }
 
-    public List<String> getPoemLines(Stream<JAXBElement<?>> stream) {
+    private Stream<Serializable> getPoemLinesStream(Stream<JAXBElement<?>> stream) {
         return stream
+                .filter(s -> s.getValue() instanceof PoemType)
                 .map(s -> ((PoemType) s.getValue()).getStanza()).flatMap(Collection::stream)
                 .map(PoemType.Stanza::getV).flatMap(Collection::stream)
-                .map(StyleType::getContent).flatMap(Collection::stream)
-                .map(p -> (String) p)
-                .collect(Collectors.toList());
+                .map(StyleType::getContent).flatMap(Collection::stream);
     }
 
-    public List<String> getTextLines(Stream<JAXBElement<?>> stream) {
-        return stream.map(s -> ((PType) s.getValue()).getContent()).flatMap(Collection::stream)
-                .map(p -> (String) p)
-                .collect(Collectors.toList());
+    private Stream<Serializable> getTextLinesStream(Stream<JAXBElement<?>> stream) {
+        return stream
+                .filter(s -> s.getValue() instanceof PType)
+                .map(s -> ((PType) s.getValue()).getContent()).flatMap(Collection::stream);
     }
 
     public List<SectionType> getSections(FictionBook fictionBook) {

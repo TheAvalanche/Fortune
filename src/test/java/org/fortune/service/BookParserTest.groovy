@@ -75,7 +75,7 @@ class BookParserTest extends Specification {
         FictionBook fictionBook = bookParser.stringToBook(testText)
         println(fictionBook.getBody().get(0).getSection().get(0))
         when:
-        def lines = bookParser.getTextLines(fictionBook)
+        def lines = bookParser.getLines(fictionBook)
         then:
         lines.size() == 4
     }
