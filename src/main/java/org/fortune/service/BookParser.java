@@ -1,11 +1,10 @@
 package org.fortune.service;
 
-import org.fortune.schema._2_0.FictionBook;
-import org.fortune.schema._2_0.PoemType;
-import org.fortune.schema._2_0.SectionType;
+import org.fortune.schema._2_0.*;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.StringReader;
@@ -13,36 +12,37 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class BookParser {
 
-    public List<String> parseLines(FictionBook fictionBook) {
-        return fictionBook.getBody().stream()
-                .map(FictionBook.Body::getSection)
-                .flatMap(Collection::stream)
-                .filter(s -> s.getSection() != null)
-                .map(SectionType::getSection)
-                .flatMap(Collection::stream)
-                .filter(s -> s.getPoem() != null)
-                .map(s -> s.getPoem().getStanza())
-                .flatMap(Collection::stream)
-                .map(PoemType.Stanza::getV)
-                .flatMap(Collection::stream)
-                .filter(p -> p.getContent().get(0) instanceof String)
-                .map(p -> (String) p.getContent().get(0))
+
+    public List<String> getLines(FictionBook fictionBook) {
+        return getPoemLines(getSections(fictionBook).stream()
+                .filter(section -> !section.getPOrImageOrPoem().isEmpty())
+                .map(SectionType::getPOrImageOrPoem).flatMap(Collection::stream));
+    }
+
+    public List<String> getTextLines(FictionBook fictionBook) {
+        return getTextLines(getSections(fictionBook).stream()
+                .filter(section -> !section.getPOrImageOrPoem().isEmpty())
+                .map(SectionType::getPOrImageOrPoem).flatMap(Collection::stream));
+    }
+
+    public List<String> getPoemLines(Stream<JAXBElement<?>> stream) {
+        return stream
+                .map(s -> ((PoemType) s.getValue()).getStanza()).flatMap(Collection::stream)
+                .map(PoemType.Stanza::getV).flatMap(Collection::stream)
+                .map(StyleType::getContent).flatMap(Collection::stream)
+                .map(p -> (String) p)
                 .collect(Collectors.toList());
     }
 
-    public List<String> getLines(FictionBook fictionBook) {
-
-        return getSections(fictionBook).stream()
-                .filter(section -> section.getPoem() != null)
-                .map(s -> s.getPoem().getStanza()).flatMap(Collection::stream)
-                .map(PoemType.Stanza::getV).flatMap(Collection::stream)
-                .map(p -> (String) p.getContent().get(0))
+    public List<String> getTextLines(Stream<JAXBElement<?>> stream) {
+        return stream.map(s -> ((PType) s.getValue()).getContent()).flatMap(Collection::stream)
+                .map(p -> (String) p)
                 .collect(Collectors.toList());
-
     }
 
     public List<SectionType> getSections(FictionBook fictionBook) {
