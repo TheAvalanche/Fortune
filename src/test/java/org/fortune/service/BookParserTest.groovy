@@ -52,6 +52,24 @@ class BookParserTest extends Specification {
                         </body>
                       </FictionBook>'''
 
+    def testMixed = '''<?xml version="1.0" encoding="utf-8"?>
+                        <FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:l="http://www.w3.org/1999/xlink">
+                          <body>
+                            <section>
+                              <poem>
+                                <stanza>
+                                  <v>Test1</v>
+                                  <v>Test2</v>
+                                </stanza>
+                              </poem>
+                            </section>
+                            <section>
+                              <p>Он все еще не хотел впустить в комнату свет с улицы.</p>
+                              <p>Вынув зажигалку, он нащупал саламандру, выгравированную на серебряном диске, нажал…</p>
+                            </section>
+                          </body>
+                        </FictionBook>'''
+
     def "should get all sections with subsections"() {
         given:
         FictionBook fictionBook = bookParser.stringToBook(testPoem)
@@ -73,7 +91,15 @@ class BookParserTest extends Specification {
     def "should get all text lines"() {
         given:
         FictionBook fictionBook = bookParser.stringToBook(testText)
-        println(fictionBook.getBody().get(0).getSection().get(0))
+        when:
+        def lines = bookParser.getLines(fictionBook)
+        then:
+        lines.size() == 4
+    }
+
+    def "should get all mixed lines"() {
+        given:
+        FictionBook fictionBook = bookParser.stringToBook(testMixed)
         when:
         def lines = bookParser.getLines(fictionBook)
         then:

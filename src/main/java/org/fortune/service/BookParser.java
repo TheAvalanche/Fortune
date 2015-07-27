@@ -20,30 +20,33 @@ public class BookParser {
 
 
     public List<String> getLines(FictionBook fictionBook) {
-        return getLinesStream(
+        return getLines(
                 getSections(fictionBook).stream()
                         .filter(section -> !section.getPOrImageOrPoem().isEmpty())
-                        .map(SectionType::getPOrImageOrPoem).flatMap(Collection::stream))
+                        .map(SectionType::getPOrImageOrPoem).flatMap(Collection::stream)
+                        .collect(Collectors.toList()));
+    }
+
+    private List<String> getLines(List<JAXBElement<?>> elements) {
+        Stream<Serializable> poemStream = getPoemLinesStream(elements);
+        Stream<Serializable> textStream = getTextLinesStream(elements);
+
+        return Stream.concat(poemStream, textStream)
+                .filter(s -> s instanceof String)
+                .map(s -> (String) s)
                 .collect(Collectors.toList());
     }
 
-    private Stream<String> getLinesStream(Stream<JAXBElement<?>> stream) {
-        Stream<Serializable> poemStream = getPoemLinesStream(stream);
-        Stream<Serializable> textStream = getTextLinesStream(stream);
-
-        return Stream.concat(poemStream, textStream).map(s -> (String) s);
-    }
-
-    private Stream<Serializable> getPoemLinesStream(Stream<JAXBElement<?>> stream) {
-        return stream
+    private Stream<Serializable> getPoemLinesStream(List<JAXBElement<?>> elements) {
+        return elements.stream()
                 .filter(s -> s.getValue() instanceof PoemType)
                 .map(s -> ((PoemType) s.getValue()).getStanza()).flatMap(Collection::stream)
                 .map(PoemType.Stanza::getV).flatMap(Collection::stream)
                 .map(StyleType::getContent).flatMap(Collection::stream);
     }
 
-    private Stream<Serializable> getTextLinesStream(Stream<JAXBElement<?>> stream) {
-        return stream
+    private Stream<Serializable> getTextLinesStream(List<JAXBElement<?>> elements) {
+        return elements.stream()
                 .filter(s -> s.getValue() instanceof PType)
                 .map(s -> ((PType) s.getValue()).getContent()).flatMap(Collection::stream);
     }

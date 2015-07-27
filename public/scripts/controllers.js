@@ -5,7 +5,8 @@ angular.module('FortuneApp')
         $scope.lineNumber = 1;
         $scope.findLine = function() {
             LinesService.findLine($scope.lineNumber).success(function (data) {
-                $scope.line = data;
+                console.log(data);
+                $scope.line = data.line;
             });
         }
     });
